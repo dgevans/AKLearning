@@ -31,7 +31,7 @@ def V0(state):
     
 s0 = 0
 mu0 = bayesian.approximatePosterior(beta(5,5).pdf)
-stateHist = bayesian.drawSamplePaths(s0,mu0,Para,N=50,T=5000)
+stateHist = bayesian.drawSamplePaths(s0,mu0,Para,N=50,T=2000)
 
 T = bayesian.BayesianBellmanMap(Para)
 

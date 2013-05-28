@@ -139,6 +139,8 @@ def drawSamplePaths(s0,mu0,Para,N=20,T=1000):
     r = N%size
     stateHist = {}
     Gamma = BayesMap(Para)
+    if rank == 0:
+        print 'drawing paths'
     for i in range(rank*n+min(rank,r), min((rank+1)*n+min(rank+1,r),N)):
 
         print range(rank*n+min(rank,r), min((rank+1)*n+min(rank+1,r),N))
@@ -165,10 +167,15 @@ def drawSamplePaths(s0,mu0,Para,N=20,T=1000):
                     break;
             muprime = Gamma(s,sprime,mu)
             stateHist[(i,t)] = sprime,approximatePosterior(muprime)
+    if rank == 0:
+        print 'done'
+        print 'gathering paths'
     stateHists = w.allgather(stateHist)
     stateHist = {}
     for hist in stateHists:
         stateHist.update(hist)
+    if rank == 0:
+        print 'done'
     return stateHist
 
 

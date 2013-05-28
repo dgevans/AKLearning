@@ -71,7 +71,7 @@ class posterioDistriubtion(object):
     def getMoment(self,m):
         if not self.moments.has_key(m):
             if m == 1:
-                self.moments[1] = quad(lambda p_d: p_d*self(p_d),0.0,1.0)[0]
+                self.moments[1] = quad(lambda p_d: p_d*self(p_d),0.0,1.0,limit=500)[0]
             else:
                 Ep_d = self.getMoment(1)
                 mom = quad(lambda p_d: (p_d-Ep_d)**m*self(p_d),0.0,1.0,limit=500)[0]
@@ -94,7 +94,7 @@ class ValueFunction(object):
         def getV(stateHistItem):
             return Vf(stateHistItem[1])[0]
             
-        self.deg = [2,2,2]
+        self.deg = [3,3,3]
     
         w = MPI.COMM_WORLD
         rank = w.Get_rank()
