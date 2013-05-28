@@ -71,10 +71,10 @@ class posterioDistriubtion(object):
     def getMoment(self,m):
         if not self.moments.has_key(m):
             if m == 1:
-                self.moments[1] = quad(lambda p_d: p_d*self(p_d),0.0,1.0,limit=500)[0]
+                self.moments[1] = quad(lambda p_d: p_d*self(p_d),0.0,1.0,full_output=1)[0]
             else:
                 Ep_d = self.getMoment(1)
-                mom = quad(lambda p_d: (p_d-Ep_d)**m*self(p_d),0.0,1.0,limit=500)[0]
+                mom = quad(lambda p_d: (p_d-Ep_d)**m*self(p_d),0.0,1.0,full_output=1)[0]
                 if mom < 0:
                     self.moments[m] = -(-mom)**(1.0/m)
                 else:

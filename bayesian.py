@@ -26,7 +26,7 @@ class BayesMap:
         self.mu = mu
         self.s = s
         self.sprime = sprime
-        norm = quad(self.calculatePosterior,0.0,1.0,limit=500)[0]
+        norm = quad(self.calculatePosterior,0.0,1.0,full_output=1)[0]
         return lambda p_d: self.calculatePosterior(p_d,normalization=norm)
     
     
