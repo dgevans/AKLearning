@@ -21,6 +21,9 @@ xi = 0.1
 #V0 = dict(itertools.izip(Para.domain,-10*np.ones(len(Para.domain))))
 
 #Vf,cf,gf = bellman.solveBellmanEquation(V0,Para)
+w = MPI.COMM_WORLD
+rank = w.Get_rank()
+size = w.Get_size()
 
 def V0(state):
     s,mu = state
@@ -33,20 +36,24 @@ s0 = 0
 mu0 = bayesian.approximatePosterior(beta(5,5).pdf)
 stateHist = bayesian.drawSamplePaths(s0,mu0,Para,N=50,T=2000)
 
+if rank == 0:
+    print len(stateHist)
+    print 'Solving Bellman'
+
 T = bayesian.BayesianBellmanMap(Para)
 
 V1 = T(V0)
 V = primitives.ValueFunction(stateHist,V1)
 
+
 for i in range(0,1000):
     Vnew = primitives.ValueFunction(stateHist,T(V))
-    print np.linalg.norm(Vnew.Vs-V.Vs)
+    if rank == 0:
+        print np.linalg.norm(Vnew.Vs-V.Vs)
     sys.stdout.flush()
     V = xi*Vnew+(1-xi)*V
 
-w = MPI.COMM_WORLD
-rank = w.Get_rank()
-size = w.Get_size()
+
 
 fout = file('stateHist'+str(rank)+'.dat','w')
 cPickle.dump((size,stateHist),fout)

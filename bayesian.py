@@ -26,7 +26,7 @@ class BayesMap:
         self.mu = mu
         self.s = s
         self.sprime = sprime
-        norm = quad(self.calculatePosterior,0.0,1.0)[0]
+        norm = quad(self.calculatePosterior,0.0,1.0,limit=500)[0]
         return lambda p_d: self.calculatePosterior(p_d,normalization=norm)
     
     
@@ -159,7 +159,8 @@ def drawSamplePaths(s0,mu0,Para,N=20,T=1000):
         
         stateHist[(i,0)] = (s0,mu0)
         for t in range(1,T):
-            #print t
+            if rank == 0:
+                print t
             s,mu = stateHist[(i,t-1)]
             r = np.random.rand()
             for sprime in range(0,3):
@@ -170,13 +171,14 @@ def drawSamplePaths(s0,mu0,Para,N=20,T=1000):
     if rank == 0:
         print 'done'
         print 'gathering paths'
-    stateHists = w.allgather(stateHist)
+    stateHists = w.gather(stateHist,root=0)
     stateHist = {}
-    for hist in stateHists:
-        stateHist.update(hist)
+    if rank == 0:
+        for hist in stateHists:
+            stateHist.update(hist)
     if rank == 0:
         print 'done'
-    return stateHist
+    return w.bcast(stateHist,root=0)
 
 
 def drawFromMu(mu):
