@@ -183,6 +183,7 @@ def drawSamplePaths(s0,mu0,Para,N=20,T=1000,p_dList=None,skip=1):
             muprimehat = approximatePosterior(muprime)
             if t%skip == 0:
                 stateHist[i,t] = (sprime,muprimehat)
+                print rank,',',t
             s,mu = (sprime,muprimehat)
     w.barrier()
     if rank == 0:

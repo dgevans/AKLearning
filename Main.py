@@ -33,8 +33,8 @@ def V0(state):
     return root(lambda V: T(V)-V,-10*np.ones(3)).x[s]
     
 s0 = 0
-mu0 = bayesian.approximatePosterior(lambda p_d:0.5*p_d)
-#mu0 = primitives.posterioDistriubtionBeta(5,5)
+#mu0 = bayesian.approximatePosterior(lambda p_d:0.5*p_d)
+mu0 = primitives.posterioDistriubtionBeta(5,5)
 stateHist = bayesian.drawSamplePaths(s0,mu0,Para,N=100,T=10000,skip=100)
 
 if rank == 0:
@@ -53,20 +53,18 @@ for i in range(0,1000):
     diff =  np.linalg.norm(Vnew.Vs-V.Vs)
     if rank == 0:
         Vold = np.hstack(map(lambda x:V(x[1]),stateHist.items()))
-        print diff
+        print 'diff:',diff
+        print np.linalg.norm(Vnew.Vs-Vold)
     sys.stdout.flush()
     if diff < 1e-10:
         break
     V = xi*Vnew+(1-xi)*V
 
-
-
-fout = file('stateHist'+str(rank)+'.dat','w')
-cPickle.dump((size,stateHist),fout)
-fout.close()
-
 if rank == 0:
     fout = file('Vf.dat','w')
     cPickle.dump(V,fout)
+    fout.close()
+    fout = file('stateHist'+str(rank)+'.dat','w')
+    cPickle.dump((size,stateHist),fout)
     fout.close()
     

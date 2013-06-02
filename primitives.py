@@ -115,16 +115,19 @@ class ValueFunction(object):
         #now combine everything
         V = np.zeros(len(stateHist))
         domain = np.zeros((len(stateHist),my_domain.shape[1])) 
-        w.Allgather(my_V,V)
-        w.Allgather(my_domain,domain)        
-        self.Vs = V
+        w.Gather(my_V,V,root=0)
+        w.Gather(my_domain,domain,root=0)        
         #now fit things
-        self.b = []
-        for s in range(0,3):
-            X = domain[slist==s,:]
-            y = V[slist==s]
-            A = hermite.hermvander3d(X[:,0],X[:,1],X[:,2],self.deg)
-            self.b.append(np.linalg.lstsq(A,y)[0].reshape((self.deg[0]+1,self.deg[1]+1,self.deg[2]+1)))
+        if rank == 0:
+            b = []
+            for s in range(0,3):
+                X = domain[slist==s,:]
+                y = V[slist==s]
+                A = hermite.hermvander3d(X[:,0],X[:,1],X[:,2],self.deg)
+                b.append(np.linalg.lstsq(A,y)[0].reshape((self.deg[0]+1,self.deg[1]+1,self.deg[2]+1)))
+        w.Bcast(V,root =0)
+        self.Vs = V
+        self.b = w.bcast(b,root=0)
     
     def __call__(self,state):
         '''
