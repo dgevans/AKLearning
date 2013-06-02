@@ -9,8 +9,9 @@ import bellman
 import numpy as np
 
 Para = parameters()
+Para.gamma = 1.2
 S = 3
-p_d = np.linspace(0.0,0.20,100)
+p_d = np.linspace(0.05,0.95,1000)
 c = np.zeros((len(p_d),S))
 g = np.zeros((len(p_d),S))
 V = np.zeros((len(p_d),S))

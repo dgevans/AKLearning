@@ -12,6 +12,7 @@ from numpy.polynomial import hermite
 from copy import deepcopy
 from mpi4py import MPI
 import itertools
+from scipy.stats import beta
 
 class parameters(object):
     
@@ -43,9 +44,9 @@ def makeDomain(Para):
     print 'making domain'
     sys.stdout.flush()
     for i in range(3*nMax*mMax):
-        m = i/(3*nMax) + 1
+        m = i/(3*nMax) + 5
         i = i%(3*nMax)
-        n = i/3 + 1
+        n = i/3 + 5
         s = i%3
         Para.domain.append((s,n,m))
     print 'done'
@@ -86,7 +87,7 @@ class posterioDistriubtion(object):
                 
 class ValueFunction(object):
 
-    def __init__(self,stateHist,Vf):
+    def __init__(self,stateHist,Vf,deg=[1,1,1]):
         def getMoments(stateHistItem):
             return stateHistItem[1][1].getMoments()
         def getS(stateHistItem):
@@ -94,7 +95,7 @@ class ValueFunction(object):
         def getV(stateHistItem):
             return Vf(stateHistItem[1])[0]
             
-        self.deg = [3,3,3]
+        self.deg = deg
     
         w = MPI.COMM_WORLD
         rank = w.Get_rank()
@@ -154,4 +155,38 @@ class ValueFunction(object):
             return Vf
     __rmul__ = __mul__
     
+    
+class posterioDistriubtionBeta(object):
+    
+    def __init__(self,n,m):
+        self.n = n
+        self.m = m
+        self.moments = {}
+        
+    def __call__(self,p_d):
+        
+        return beta(self.n,self.m).pdf(p_d)
+            
+    def getMoment(self,mom):
+        n = self.n
+        m = self.m
+        mu = beta(n,m)
+        if not self.moments.has_key(mom):
+            if mom == 1:
+                self.moments[mom]= n*1.0/(n+m)
+            elif mom == 2:
+                self.moments[mom] = ( n*m*1.0/((n+m)**2*(n+m+1)) )**(0.5)
+            elif mom == 3:
+                Ex = mu.moment(1)
+                Ex2 = mu.moment(2)
+                Ex3 = mu.moment(3)
+                moment = ( Ex3 - 3*Ex2*Ex+2*Ex**3 )
+                if moment< 0:
+                    self.moments[mom] = -(-moment)**(1.0/3)
+                else:
+                    self.moments[mom] = moment**(1.0/3)
+        return self.moments[mom]
+    
+    def getMoments(self,m = [1,2,3]):
+        return np.array(map(self.getMoment,m))
     

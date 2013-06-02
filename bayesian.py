@@ -10,6 +10,7 @@ from scipy.integrate import quad
 from scipy.stats import beta
 import numpy as np
 from primitives import parameters
+from primitives import posterioDistriubtionBeta
 from scipy.optimize import minimize_scalar
 from primitives import posterioDistriubtion
 from mpi4py import MPI
@@ -23,6 +24,14 @@ class BayesMap:
         self.Para = Para
     
     def __call__(self,s,sprime,mu):
+                
+        if isinstance(mu,posterioDistriubtionBeta):
+            if sprime == 0:
+                return posterioDistriubtionBeta(mu.n,mu.m)
+            elif sprime == 1:
+                return posterioDistriubtionBeta(mu.n,mu.m+1)
+            else:
+                return posterioDistriubtionBeta(mu.n+1,mu.m)
         self.mu = mu
         self.s = s
         self.sprime = sprime
@@ -51,6 +60,8 @@ def approximatePosterior(mu,x = np.linspace(0,1,10),tol=1e-3):
     '''
     Approximates the posterior using cubic splines
     '''
+    if isinstance(mu,posterioDistriubtionBeta):
+        return mu
     y = np.hstack(map(mu,x))
     muhat = posterioDistriubtion(x,y,[2])
     done = False
@@ -127,27 +138,29 @@ class BayesianBellmanMap:
         
         return np.hstack([V,c,g])
 
-def drawSamplePaths(s0,mu0,Para,N=20,T=1000):
+def drawSamplePaths(s0,mu0,Para,N=20,T=1000,p_dList=None,skip=1):
     '''
     Draw a sequence of realizations of the state and calculate the posterior at
     each history
     '''
+    N = int(N)
     w = MPI.COMM_WORLD
-    rank = w.Get_rank()
-    size = w.Get_size()
+    rank = int(w.Get_rank())
+    size = int(w.Get_size())
     n = N/size
     r = N%size
     stateHist = {}
     Gamma = BayesMap(Para)
     if rank == 0:
         print 'drawing paths'
-    for i in range(rank*n+min(rank,r), min((rank+1)*n+min(rank+1,r),N)):
-
         print range(rank*n+min(rank,r), min((rank+1)*n+min(rank+1,r),N))
-        print rank,':',rank*n+min(rank,r),min((rank+1)*n+min(rank+1,r),N)
+    for i in range(rank*n+min(rank,r), min((rank+1)*n+min(rank+1,r),N)):
         #setup
         #draw randomly from initial prior
-        p_d = drawFromMu(mu0)
+        if p_dList == None:
+            p_d = drawFromMu(mu0)
+        else:
+            p_d = p_dList[i]
         #construct full transition matrix
         P = np.zeros((3,3))
         for s in range(0,3):
@@ -158,16 +171,20 @@ def drawSamplePaths(s0,mu0,Para,N=20,T=1000):
         cumP = np.cumsum(P,axis=1)
         
         stateHist[(i,0)] = (s0,mu0)
+        s,mu = (s0,mu0)
         for t in range(1,T):
-            if rank == 0:
-                print t
-            s,mu = stateHist[(i,t-1)]
+            #if rank == 0:
+            #    print t
             r = np.random.rand()
             for sprime in range(0,3):
                 if r < cumP[s,sprime]:
                     break;
             muprime = Gamma(s,sprime,mu)
-            stateHist[(i,t)] = sprime,approximatePosterior(muprime)
+            muprimehat = approximatePosterior(muprime)
+            if t%skip == 0:
+                stateHist[i,t] = (sprime,muprimehat)
+            s,mu = (sprime,muprimehat)
+    w.barrier()
     if rank == 0:
         print 'done'
         print 'gathering paths'
