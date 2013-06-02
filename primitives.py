@@ -192,4 +192,20 @@ class posterioDistriubtionBeta(object):
     
     def getMoments(self,m = [1,2,3]):
         return np.array(map(self.getMoment,m))
+        
+        
+        
+        
+def printResults(c,res,j):
+    n= 0
+    import time
+    import sys
+    while True:
+        time.sleep(0.5)
+        c.spin()
+        out = c.metadata[res.msg_ids[j]].stdout.split()
+        for i in range(n,len(out)):
+            print out[i]
+            sys.stdout.flush()
+        n = len(out)
     
