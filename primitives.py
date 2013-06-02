@@ -118,8 +118,8 @@ class ValueFunction(object):
         w.Gather(my_V,V,root=0)
         w.Gather(my_domain,domain,root=0)        
         #now fit things
+        b = []
         if rank == 0:
-            b = []
             for s in range(0,3):
                 X = domain[slist==s,:]
                 y = V[slist==s]
