@@ -196,16 +196,17 @@ class posterioDistriubtionBeta(object):
         
         
         
-def printResults(c,res,j):
-    n= 0
+def printResults(c,res):
+    n=[0]* len(c.ids)
     import time
     import sys
     while True:
-        time.sleep(0.5)
+        time.sleep(0.1)
         c.spin()
-        out = c.metadata[res.msg_ids[j]].stdout.split()
-        for i in range(n,len(out)):
-            print out[i]
-            sys.stdout.flush()
-        n = len(out)
+        for j in range(0,len(n)):
+            out = c.metadata[res.msg_ids[j]].stdout.split()
+            for i in range(n[j],len(out)):
+                print out[i]
+                sys.stdout.flush()
+                n[j] = len(out)
     

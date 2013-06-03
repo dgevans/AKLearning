@@ -14,9 +14,8 @@ from primitives import posterioDistriubtionBeta
 from scipy.optimize import minimize_scalar
 from primitives import posterioDistriubtion
 from mpi4py import MPI
+import itertools
 
-if __name__ == "__main__":
-    testSimulate()
 
 class BayesMap:
     
@@ -116,6 +115,7 @@ class BayesianBellmanMap:
         '''
         s,mu = state
         if not hasattr(mu,'muprime'):
+            print fail
             mu.muprime = {}
             for sprime in range(0,3):
                 mu.muprime[sprime] = approximatePosterior(self.Gamma(s,sprime,mu))
@@ -242,3 +242,21 @@ def testSimulate(mu0=beta(3,3).pdf,T=100):
         muprime = Gamma(s,sprime,mu)
         muHist.append( approximatePosterior(muprime) )
     return muHist,sHist
+    
+def computeStateMoments(stateHist,Para):
+    Gamma = BayesMap(Para)
+    w = MPI.COMM_WORLD
+    rank = w.Get_rank()
+    size = w.Get_size()        
+    N = len(stateHist)
+    n = N/size
+    r = N%size
+    my_States = itertools.islice(stateHist.iteritems(),rank*n+min(rank,r),(rank+1)*n+min(rank+1,r))    
+     
+    for i,state in enumerate(my_States):
+        _,(s,mu) = state
+        mu.getMoments()
+        mu.muprime = {}
+        for sprime in range(0,3):
+            mu.muprime[sprime] = approximatePosterior(Gamma(s,sprime,mu))
+            mu.muprime[sprime].getMoments()

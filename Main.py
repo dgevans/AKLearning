@@ -33,23 +33,32 @@ def V0(state):
     return root(lambda V: T(V)-V,-10*np.ones(3)).x[s]
     
 s0 = 0
-#mu0 = bayesian.approximatePosterior(lambda p_d:0.5*p_d)
-mu0 = primitives.posterioDistriubtionBeta(5,5)
-stateHist = bayesian.drawSamplePaths(s0,mu0,Para,N=100,T=10000,skip=100)
+mu0 = bayesian.approximatePosterior(lambda p_d:0.5*p_d)
+#u0 = primitives.posterioDistriubtionBeta(5,5)
+stateHist = bayesian.drawSamplePaths(s0,mu0,Para,N=2,T=100,skip=1)
+
+
 
 if rank == 0:
     print len(stateHist)
     print 'Solving Bellman'
     sys.stdout.flush()
+    print 'computing state momemnts'
+    
+
+bayesian.computeStateMoments(stateHist,Para)
+
+if rank==0:
+    print 'done'
 
 T = bayesian.BayesianBellmanMap(Para)
 
 V1 = T(V0)
-V = primitives.ValueFunction(stateHist,V1,deg=[2,2,2])
+V = primitives.ValueFunction(stateHist,V1,deg=[1,1,1])
 
 
 for i in range(0,1000):
-    Vnew = primitives.ValueFunction(stateHist,T(V),deg=[2,2,2])
+    Vnew = primitives.ValueFunction(stateHist,T(V),deg=[1,1,1])
     diff =  np.linalg.norm(Vnew.Vs-V.Vs)
     if rank == 0:
         Vold = np.hstack(map(lambda x:V(x[1]),stateHist.items()))
