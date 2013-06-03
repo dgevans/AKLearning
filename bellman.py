@@ -6,6 +6,7 @@ Created on Sun May 19 16:33:20 2013
 """
 import numpy as np
 from scipy.optimize import root
+from Spline import Spline
 import itertools
 import sys
 
@@ -139,5 +140,19 @@ def solveBellmanEquation(V0,Para):
     gf = dict(itertools.izip(domain,policies[:,2]))
     
     return Vf,cf,gf
+    
+def approximateREValueFunction(Para):
+    '''
+    approximate the rational expectations value function
+    '''
+    p_ds = np.linspace(0,1)
+    Vs = np.zeros((len(p_ds),3))
+    for i,p_d in enumerate(p_ds):
+        T = BellmanMap(Para,p_d)
+        Vs[i,:] = root(lambda V:T(V)-V,-10*np.ones(3)).x
+    Vf = [0]*3
+    for s in range(0,3):
+        Vf[s] = Spline(p_ds,Vs[:,s])
+    return Vf
                 
         

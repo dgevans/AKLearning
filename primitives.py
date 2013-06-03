@@ -88,12 +88,14 @@ class posterioDistriubtion(object):
 class ValueFunction(object):
 
     def __init__(self,stateHist,Vf,deg=[1,1,1]):
-        def getMoments(stateHistItem):
-            return stateHistItem[1][1].getMoments()
-        def getS(stateHistItem):
-            return stateHistItem[1][0]
-        def getV(stateHistItem):
-            return Vf(stateHistItem[1])[0]
+        def getMoments(state):
+            s,mu = state
+            return mu.getMoments()
+        def getS(state):
+            s,mu = state
+            return s
+        def getV(state):
+            return Vf(state)[0]
             
         self.deg = deg
     
@@ -104,12 +106,12 @@ class ValueFunction(object):
         n = N/size
         r = N%size
         
-        my_States = itertools.islice(stateHist.iteritems(),rank*n+min(rank,r),(rank+1)*n+min(rank+1,r))                
+        my_States = itertools.islice(stateHist.itervalues(),rank*n+min(rank,r),(rank+1)*n+min(rank+1,r))                
         my_domain = np.vstack(itertools.imap(getMoments,my_States))
         
-        slist = np.hstack(itertools.imap(getS,stateHist.iteritems()))
+        slist = np.hstack(itertools.imap(getS,stateHist.itervalues()))
         
-        my_States = itertools.islice(stateHist.iteritems(),rank*n+min(rank,r),(rank+1)*n+min(rank+1,r))
+        my_States = itertools.islice(stateHist.itervalues(),rank*n+min(rank,r),(rank+1)*n+min(rank+1,r))
         my_V = np.hstack(itertools.imap(getV,my_States))
         
         #now combine everything
