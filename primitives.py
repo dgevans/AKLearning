@@ -202,7 +202,7 @@ def printResults(c,res):
     n=[0]* len(c.ids)
     import time
     import sys
-    while True:
+    while not res.ready():
         time.sleep(0.1)
         c.spin()
         for j in range(0,len(n)):
