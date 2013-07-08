@@ -15,7 +15,7 @@ from mpi4py import MPI
 import cPickle
 
 Para = primitives.parameters()
-xi = 0.1
+xi = 0.95
 #Para = primitives.makeDomain(Para)
 
 #V0 = dict(itertools.izip(Para.domain,-10*np.ones(len(Para.domain))))
@@ -26,9 +26,9 @@ rank = w.Get_rank()
 size = w.Get_size()
     
 s0 = 0
-mu0 = bayesian.approximatePosterior(lambda p_d:0.5*p_d)
-#mu0 = primitives.posterioDistriubtionBeta(5,5)
-stateHist = bayesian.drawSamplePaths(s0,mu0,Para,N=32,T=10000,skip=100)
+#mu0 = bayesian.approximatePosterior(lambda p_d:0.5*p_d)
+mu0 = primitives.posterioDistriubtionBeta(5,5)
+stateHist = bayesian.drawSamplePaths(s0,mu0,Para,N=100,T=10000,skip=100)
 
 
 
@@ -66,9 +66,9 @@ for i in range(0,1000):
     Vnew = primitives.ValueFunction(stateHist,T(V),deg=Vdeg)
     diff =  np.linalg.norm(Vnew.Vs-V.Vs)
     if rank == 0:
-        Vold = np.hstack(map(lambda x:V(x[1]),stateHist.items()))
+        #Vold = np.hstack(map(lambda x:V(x[1]),stateHist.items()))realy slows down code
         print 'diff:',diff
-        print np.linalg.norm(Vnew.Vs-Vold)
+        #print np.linalg.norm(Vnew.Vs-Vold)
     sys.stdout.flush()
     if diff < 1e-10:
         break

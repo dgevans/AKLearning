@@ -18,7 +18,7 @@ class parameters(object):
     
     gamma = 2.0
     
-    delta = 0.05
+    delta = 0.25
     
     beta  = 1.0/1.04
     

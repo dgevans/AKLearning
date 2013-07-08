@@ -115,7 +115,6 @@ class BayesianBellmanMap:
         '''
         s,mu = state
         if not hasattr(mu,'muprime'):
-            print fail
             mu.muprime = {}
             for sprime in range(0,3):
                 mu.muprime[sprime] = approximatePosterior(self.Gamma(s,sprime,mu))
@@ -155,6 +154,7 @@ def drawSamplePaths(s0,mu0,Para,N=20,T=1000,p_dList=None,skip=1):
         print 'drawing paths'
         print range(rank*n+min(rank,r), min((rank+1)*n+min(rank+1,r),N))
     for i in range(rank*n+min(rank,r), min((rank+1)*n+min(rank+1,r),N)):
+        print i
         #setup
         #draw randomly from initial prior
         if p_dList == None:
@@ -183,7 +183,6 @@ def drawSamplePaths(s0,mu0,Para,N=20,T=1000,p_dList=None,skip=1):
             muprimehat = approximatePosterior(muprime)
             if t%skip == 0:
                 stateHist[i,t] = (sprime,muprimehat)
-                print rank,',',t
             s,mu = (sprime,muprimehat)
     w.barrier()
     if rank == 0:

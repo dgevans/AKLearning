@@ -38,11 +38,13 @@ class BellmanMap:
         q = self.Para.q[s]
         gamma = self.Para.gamma
         beta = self.Para.beta
-        z = self.Para.z
+        if(len(self.Para.z) > 1):
+            z = self.Para.z[s]
+        else:
+            z = self.Para.z
         delta = self.Para.delta
         #construct step ahead probabilitiy distriubtion
         P = self.getProbabilityDistribution(s,p_d)
-        S = len(P)
         #Constant of proportionality relating c and g
         
         alpha = ( (1-gamma) *beta*P.dot(Vprime) / q )**(-1.0/gamma)
@@ -57,10 +59,20 @@ def solveBellman(Para,p_d,s):
     T = BellmanMap(Para,p_d)
     
     sol =  root(lambda V:T(V)-V,-10*np.ones(3))
+    
     if sol.success:
         return T.maximizeObjective(s,sol.x)
     else:
-        return None
+        V = -10*np.ones(3)
+        for t in range(0,1000):
+            Vnew = T(V)
+            diff = np.linalg.norm(Vnew-V)
+            V = Vnew
+            if diff < 1e-10:
+                break
+        return T.maximizeObjective(s,V)
+
+        
         
         
 
